@@ -1,4 +1,4 @@
-# Task 10: Swagger Documentation
+# Task 9: Swagger Documentation
 
 ## Learning Objectives
 
@@ -8,9 +8,73 @@
 - Add authentication documentation
 - Serve interactive API documentation
 
+## Why This Matters
+
+API documentation is essential because:
+
+- **Developer Experience**: Makes it easy for frontend developers to use your API
+- **Testing**: Interactive documentation allows testing without writing code
+- **Onboarding**: New team members can understand the API quickly
+- **Contract**: Documents the API contract between frontend and backend
+- **Standards**: OpenAPI/Swagger is an industry standard
+
+Good documentation is a sign of a professional, production-ready API.
+
 ## Overview
 
 In this task, you'll learn to document your API using Swagger/OpenAPI. You'll create interactive documentation that allows users to test endpoints directly from the browser.
+
+**Important**: You must document **every single endpoint** in your API. This includes all HTTP methods, all parameters, all response codes, and all schemas.
+
+## Starter Branch
+
+This task starts with:
+
+- Complete working API with all endpoints functional
+- Full CRUD for comedians and performances
+- Authentication working (register/login)
+- Favorites resource with protected routes
+- Error handling middleware
+- Validation middleware
+- No Swagger configuration yet
+- No API documentation yet
+
+## Documentation Requirements
+
+You must document **all** of these endpoints:
+
+### Health Endpoint
+
+- `GET /health` - Health check
+
+### Comedians Endpoints
+
+- `GET /api/comedians` - Get all comedians (with query params: nationality, limit, offset)
+- `GET /api/comedians/:id` - Get comedian by ID
+- `POST /api/comedians` - Create a new comedian
+- `PUT /api/comedians/:id` - Update a comedian
+- `DELETE /api/comedians/:id` - Delete a comedian
+
+### Performances Endpoints
+
+- `GET /api/performances` - Get all performances (with query param: comedianId)
+- `GET /api/performances/:id` - Get performance by ID
+- `POST /api/performances` - Create a new performance
+- `PUT /api/performances/:id` - Update a performance
+- `DELETE /api/performances/:id` - Delete a performance
+
+### Authentication Endpoints
+
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login user
+
+### Favorites Endpoints (Protected)
+
+- `GET /api/favorites` - Get user's favorite comedians
+- `POST /api/favorites` - Add comedian to favorites
+- `DELETE /api/favorites/:comedianId` - Remove comedian from favorites
+
+**Total: 16 endpoints to document**
 
 ## Instructions
 
@@ -27,21 +91,45 @@ npm install -D @types/swagger-jsdoc @types/swagger-ui-express
 
 Create Swagger configuration file.
 
-### Step 3: Document Endpoints
+### Step 3: Define Schemas
 
-Add JSDoc comments to your routes with Swagger annotations.
+Define all schemas in your Swagger config. You must define:
 
-### Step 4: Define Schemas
+- **Comedian** schema (all fields: id, name, bio, birthDate, nationality, createdAt, updatedAt)
+- **Performance** schema (all fields: id, comedianId, title, venue, date, description, createdAt, updatedAt)
+- **User** schema (id, email, createdAt, updatedAt - **do NOT include password**)
+- **Favorite** schema (userId, comedianId)
+- **Error** schema (message, statusCode, details?)
+- **AuthRequest** schema (email, password)
+- **AuthResponse** schema (message, user, token)
 
-Document request and response schemas.
+### Step 4: Document Every Endpoint
 
-### Step 5: Add Authentication Documentation
+Add JSDoc comments to **every route** with Swagger annotations. Each endpoint must have:
 
-Document JWT authentication requirements.
+- **summary**: Brief description
+- **tags**: Group endpoints (e.g., [Comedians], [Authentication])
+- **parameters**: Path parameters, query parameters
+- **requestBody**: For POST/PUT (with schema reference)
+- **responses**: **All possible status codes** with schemas:
+  - 200: Success response
+  - 201: Created response
+  - 400: Validation error
+  - 401: Unauthorized (for protected routes)
+  - 404: Not found
+  - 409: Conflict (duplicate)
+  - 500: Server error
+- **security**: For protected routes, add `security: [{ bearerAuth: [] }]`
+
+### Step 5: Document Authentication
+
+- Add `bearerAuth` security scheme to Swagger config
+- Mark protected routes with `security: [{ bearerAuth: [] }]`
+- Document auth endpoints clearly
 
 ### Step 6: Serve Swagger UI
 
-Mount Swagger UI in your Express app.
+Mount Swagger UI in your Express app at `/api-docs`
 
 ## Key Concepts
 
@@ -50,88 +138,6 @@ Mount Swagger UI in your Express app.
 - **Schemas**: Definitions of data structures
 - **Swagger UI**: Interactive documentation interface
 - **Authentication**: Documenting security requirements
-
-## Manual Testing (Gherkin Format)
-
-### Feature: Access Swagger Documentation
-
-```gherkin
-Scenario: View Swagger documentation
-  Given the server is running
-  When I navigate to /api-docs in a browser
-  Then I should see the Swagger UI interface
-    And all API endpoints should be listed
-    And each endpoint should have documentation
-
-Scenario: View endpoint details
-  Given I am viewing the Swagger documentation
-  When I expand an endpoint
-  Then I should see the endpoint description
-    And I should see request parameters
-    And I should see response schemas
-    And I should see example requests/responses
-```
-
-**Expected URL:**
-```
-http://localhost:3000/api-docs
-```
-
-**Expected Behavior:**
-- Swagger UI loads in browser
-- All endpoints are visible
-- Endpoints are grouped by tags
-- Each endpoint can be expanded to see details
-
-### Feature: Test Endpoints from Swagger
-
-```gherkin
-Scenario: Execute request from Swagger UI
-  Given I am viewing the Swagger documentation
-  When I click "Try it out" on an endpoint
-    And I fill in the required parameters
-    And I click "Execute"
-  Then the request should be sent to the server
-    And I should see the response
-    And the response should match the documented schema
-
-Scenario: Test authenticated endpoint
-  Given I am viewing the Swagger documentation
-  When I click the "Authorize" button
-    And I enter a JWT token
-    And I click "Authorize"
-  Then I should be able to test protected endpoints
-    And the Authorization header should be included in requests
-```
-
-**Expected Behavior:**
-- "Try it out" button makes endpoints interactive
-- Can fill in parameters and execute requests
-- Responses are displayed in the UI
-- Authorization can be set globally
-
-### Feature: View Request/Response Schemas
-
-```gherkin
-Scenario: View request schema
-  Given I am viewing an endpoint in Swagger
-  When the endpoint requires a request body
-  Then I should see the request schema
-    And I should see required fields
-    And I should see field types and descriptions
-
-Scenario: View response schemas
-  Given I am viewing an endpoint in Swagger
-  Then I should see possible response codes
-    And I should see response schemas for each code
-    And I should see example response bodies
-```
-
-**Expected Schema Display:**
-- Request body structure
-- Field types (string, number, etc.)
-- Required vs optional fields
-- Response examples for different status codes
 
 ## Code Examples
 
@@ -336,7 +342,23 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 5. **Security**: Document authentication requirements
 6. **Keep Updated**: Update documentation when API changes
 
+## Documentation Checklist
+
+Before considering this task complete, verify:
+
+- [ ] All 16 endpoints are documented
+- [ ] All schemas are defined (Comedian, Performance, User, Favorite, Error, AuthRequest, AuthResponse)
+- [ ] All status codes are documented for each endpoint (200, 201, 400, 401, 404, 409, 500)
+- [ ] Query parameters are documented (nationality, limit, offset, comedianId)
+- [ ] Path parameters are documented (:id, :comedianId)
+- [ ] Request bodies are documented with schemas
+- [ ] Response bodies are documented with schemas
+- [ ] Protected routes have `security: [{ bearerAuth: [] }]`
+- [ ] Authentication is documented (bearerAuth security scheme)
+- [ ] Swagger UI is accessible at `/api-docs`
+- [ ] All endpoints are testable from Swagger UI
+- [ ] Examples are provided where helpful
+
 ## Next Steps
 
 Congratulations! You've completed all the core tasks. You can now explore the extra assignments or review what you've learned.
-

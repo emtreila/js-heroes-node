@@ -6,253 +6,382 @@
 - Learn how the request/response pipeline works
 - Create custom middleware functions
 - Understand middleware execution order
-- Modify request and response objects
+- Implement validation middleware with Zod
+- Implement centralized error handling middleware
 
 ## Overview
 
 Middleware functions are functions that have access to the request object (`req`), response object (`res`), and the next middleware function in the application's request-response cycle. They can execute code, make changes to the request and response objects, end the request-response cycle, and call the next middleware.
 
+In this task, you'll create two critical middlewares:
+
+1. **Validation Middleware** - Validates request data before it reaches controllers
+2. **Error Handling Middleware** - Centralizes error handling for consistent responses
+
+## Starter Branch
+
+This task starts with:
+
+- Organized routers in `routes/` directory
+- Controllers in `controllers/` directory
+- Routes mounted in `server.ts`
+- Only built-in Express middleware (express.json, etc.)
+- No custom middleware yet
+
+## Why Middleware Matters
+
+### Why Validation is Necessary
+
+**Problem**: Without validation, invalid or malicious data can reach your controllers and database, causing:
+
+- Data integrity issues
+- Security vulnerabilities
+- Poor error messages for clients
+- Type safety problems
+
+**Solution**: Validation middleware checks data before it reaches your controllers:
+
+- Ensures data matches expected format
+- Provides clear error messages
+- Prevents invalid data from reaching the database
+- Improves type safety with TypeScript
+
+### Why Centralized Error Handling is Necessary
+
+**Problem**: Without centralized error handling:
+
+- Error responses are inconsistent across endpoints
+- Error logging is scattered
+- Hard to maintain and debug
+- Duplicate error handling code
+
+**Solution**: Centralized error middleware:
+
+- Consistent error response format
+- Centralized logging for debugging
+- Easier to maintain
+- Better user experience with clear error messages
+
 ## Instructions
 
-### Step 1: Understand Middleware Signature
+### Step 1: Install Zod
 
-Learn the standard middleware function signature:
+Install Zod for schema validation:
+
+```bash
+npm install zod
+```
+
+### Step 2: Create Validation Middleware
+
+Create `src/middleware/validate.middleware.ts`:
 
 ```typescript
-(req: Request, res: Response, next: NextFunction) => void
+import { NextFunction, Request, Response } from 'express';
+import { ZodError, ZodSchema } from 'zod';
+
+export const validate = (schema: ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    try {
+      schema.parse(req.body);
+      next();
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({
+          error: {
+            message: 'Validation error',
+            details: error.errors,
+          },
+        });
+      } else {
+        next(error);
+      }
+    }
+  };
+};
 ```
 
-### Step 2: Create Logging Middleware
+**How it works**:
 
-Create a middleware that logs request details (method, URL, timestamp).
+- Takes a Zod schema as parameter
+- Returns a middleware function
+- Validates `req.body` against the schema
+- If valid, calls `next()` to continue
+- If invalid, returns 400 with validation errors
 
-### Step 3: Create Request Modification Middleware
+### Step 3: Create Validation Schemas
 
-Create middleware that adds custom properties to the request object.
+Create Zod schemas for your request bodies. For example, in your routes file:
 
-### Step 4: Understand Middleware Order
+```typescript
+import { z } from 'zod';
 
-Learn that middleware executes in the order it's registered.
-
-### Step 5: Create Error Handling Middleware
-
-Create middleware that handles errors (has 4 parameters: err, req, res, next).
-
-## Key Concepts
-
-- **Middleware Chain**: Middleware executes sequentially
-- **next()**: Calls the next middleware in the chain
-- **Request Modification**: Middleware can add properties to `req`
-- **Response Modification**: Middleware can modify headers, status, etc.
-- **Error Middleware**: Special middleware with 4 parameters for error handling
-
-## Manual Testing (Gherkin Format)
-
-### Feature: Request Logging Middleware
-
-```gherkin
-Scenario: Log request details
-  Given logging middleware is registered
-  When I send a GET request to /api/comedians
-  Then the request details should be logged to console
-    And the request should proceed normally
-    And I should receive a 200 status code
-
-Scenario: Log different request types
-  Given logging middleware is registered
-  When I send a POST request to /api/comedians
-  Then the log should show POST method
-    And when I send a DELETE request
-    Then the log should show DELETE method
+const createComedianSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  bio: z.string().optional(),
+  birthDate: z.string().optional(),
+  nationality: z.string().optional(),
+});
 ```
 
-**Expected Console Output:**
-```
-[2024-01-15T10:30:00.000Z] GET /api/comedians - ::1
-[2024-01-15T10:30:05.000Z] POST /api/comedians - ::1
+### Step 4: Apply Validation to Routes
+
+Apply validation middleware to POST and PUT routes:
+
+```typescript
+import { validate } from '../middleware/validate.middleware';
+
+router.post('/', validate(createComedianSchema), createComedian);
+router.put('/:id', validate(updateComedianSchema), updateComedian);
 ```
 
-**Expected Request:**
-```bash
-GET http://localhost:3000/api/comedians
-```
+### Step 5: Create Custom Error Class
 
-**Expected Response:**
-```json
-{
-  "data": [...],
-  "count": 5
+Create `src/middleware/error.middleware.ts` with a custom error class:
+
+```typescript
+export interface AppError extends Error {
+  statusCode?: number;
 }
-```
 
-### Feature: Request Modification Middleware
+export class CustomError extends Error implements AppError {
+  statusCode: number;
 
-```gherkin
-Scenario: Add custom property to request
-  Given middleware adds requestId to request object
-  When I send a request to any endpoint
-  Then the request object should have a requestId property
-    And the requestId should be accessible in route handlers
-```
-
-**Expected Behavior:**
-- Middleware adds `req.requestId = generateId()`
-- Route handler can access `req.requestId`
-- Response includes requestId in headers
-
-**Expected Request:**
-```bash
-GET http://localhost:3000/api/comedians
-```
-
-**Expected Response Headers:**
-```
-X-Request-ID: abc-123-def-456
-```
-
-### Feature: Middleware Execution Order
-
-```gherkin
-Scenario: Middleware executes in registration order
-  Given middleware A logs "A"
-    And middleware B logs "B"
-    And middleware C logs "C"
-  When I send a request
-  Then the logs should appear in order: A, B, C
-    And the response should be successful
-```
-
-**Expected Console Output:**
-```
-Middleware A executed
-Middleware B executed
-Middleware C executed
-```
-
-### Feature: Error Handling Middleware
-
-```gherkin
-Scenario: Catch and handle errors
-  Given an error occurs in a route handler
-  When the error middleware is registered
-  Then the error should be caught by error middleware
-    And I should receive an appropriate error response
-    And the error should be logged
-
-Scenario: Handle different error types
-  Given different types of errors can occur
-  When a 404 error occurs
-  Then I should receive a 404 status code
-    And when a 500 error occurs
-    Then I should receive a 500 status code
-```
-
-**Expected Request (Non-existent route):**
-```bash
-GET http://localhost:3000/api/non-existent
-```
-
-**Expected Response:**
-```json
-{
-  "error": {
-    "message": "Route not found",
-    "statusCode": 404
+  constructor(message: string, statusCode: number = 500) {
+    super(message);
+    this.statusCode = statusCode;
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 ```
 
-**Expected Request (Server error):**
-```bash
-GET http://localhost:3000/api/comedians/invalid-id
-```
+### Step 6: Create Error Handling Middleware
 
-**Expected Response:**
-```json
-{
-  "error": {
-    "message": "Internal Server Error",
-    "statusCode": 500
-  }
-}
-```
-
-## Code Examples
-
-### Basic Middleware
+Add the error handling middleware to the same file:
 
 ```typescript
-// src/middleware/logger.middleware.ts
 import { Request, Response, NextFunction } from 'express';
-
-export const loggerMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${req.method} ${req.url}`);
-  next(); // Important: call next() to continue
-};
-```
-
-### Request Modification Middleware
-
-```typescript
-// src/middleware/request-id.middleware.ts
-import { Request, Response, NextFunction } from 'express';
-import { randomUUID } from 'crypto';
-
-export const requestIdMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  req.requestId = randomUUID();
-  res.setHeader('X-Request-ID', req.requestId);
-  next();
-};
-```
-
-### Error Handling Middleware
-
-```typescript
-// src/middleware/error.middleware.ts
-import { Request, Response, NextFunction } from 'express';
+import { AppError } from './error.middleware';
 
 export const errorMiddleware = (
-  err: Error,
+  err: AppError,
   req: Request,
   res: Response,
   next: NextFunction
 ): void => {
-  console.error('Error:', err.message);
-  res.status(500).json({
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+
+  // Log error for debugging
+  console.error(`Error ${statusCode}: ${message}`, {
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+  });
+
+  // Return error response
+  res.status(statusCode).json({
     error: {
-      message: err.message,
-      statusCode: 500,
+      message,
+      statusCode,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     },
   });
 };
 ```
 
-### Using Middleware
+**Important**: Error middleware must have 4 parameters: `(err, req, res, next)`
+
+### Step 7: Register Error Middleware
+
+Register the error middleware in `server.ts` **after all routes**:
+
+```typescript
+import { errorMiddleware } from './middleware/error.middleware';
+
+// ... all your routes ...
+
+// Error middleware must be last
+app.use(errorMiddleware);
+```
+
+### Step 8: Update Controllers to Use CustomError
+
+Update your controllers to throw `CustomError` and use `next(error)`:
+
+```typescript
+import { CustomError } from '../middleware/error.middleware';
+
+export const getComedianById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const comedian = mockComedians.find((c) => c.id === id);
+
+    if (!comedian) {
+      throw new CustomError('Comedian not found', 404);
+    }
+
+    res.json({ data: comedian });
+  } catch (error) {
+    next(error); // Pass error to error middleware
+  }
+};
+```
+
+## Key Concepts
+
+- **Middleware Chain**: Middleware executes sequentially in the order it's registered
+- **next()**: Calls the next middleware in the chain
+- **Validation Middleware**: Validates data before it reaches controllers
+- **Error Middleware**: Special middleware with 4 parameters that catches all errors
+- **CustomError**: Custom error class for consistent error handling
+
+## Code Examples
+
+### Complete Validation Middleware
+
+```typescript
+// src/middleware/validate.middleware.ts
+import { NextFunction, Request, Response } from 'express';
+import { ZodError, ZodSchema } from 'zod';
+
+export const validate = (schema: ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    try {
+      schema.parse(req.body);
+      next();
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({
+          error: {
+            message: 'Validation error',
+            details: error.errors,
+          },
+        });
+      } else {
+        next(error);
+      }
+    }
+  };
+};
+```
+
+### Complete Error Middleware
+
+```typescript
+// src/middleware/error.middleware.ts
+import { Request, Response, NextFunction } from 'express';
+
+export interface AppError extends Error {
+  statusCode?: number;
+}
+
+export class CustomError extends Error implements AppError {
+  statusCode: number;
+
+  constructor(message: string, statusCode: number = 500) {
+    super(message);
+    this.statusCode = statusCode;
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+export const errorMiddleware = (
+  err: AppError,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+
+  console.error(`Error ${statusCode}: ${message}`, {
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+  });
+
+  res.status(statusCode).json({
+    error: {
+      message,
+      statusCode,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    },
+  });
+};
+```
+
+### Using Validation in Routes
+
+```typescript
+// src/routes/comedians.routes.ts
+import { Router } from 'express';
+import { z } from 'zod';
+import { validate } from '../middleware/validate.middleware';
+import { createComedian } from '../controllers/comedian.controller';
+
+const router = Router();
+
+const createComedianSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  bio: z.string().optional(),
+  nationality: z.string().optional(),
+});
+
+router.post('/', validate(createComedianSchema), createComedian);
+
+export default router;
+```
+
+### Using CustomError in Controllers
+
+```typescript
+// src/controllers/comedian.controller.ts
+import { NextFunction, Request, Response } from 'express';
+import { CustomError } from '../middleware/error.middleware';
+
+export const getComedianById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const comedian = mockComedians.find((c) => c.id === id);
+
+    if (!comedian) {
+      throw new CustomError('Comedian not found', 404);
+    }
+
+    res.json({ data: comedian });
+  } catch (error) {
+    next(error); // Pass to error middleware
+  }
+};
+```
+
+### Registering Middleware in server.ts
 
 ```typescript
 // src/server.ts
 import express from 'express';
-import { loggerMiddleware } from './middleware/logger.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
+import comedianRoutes from './routes/comedians.routes';
 
 const app = express();
 
-// Apply middleware globally (before routes)
-app.use(loggerMiddleware);
+app.use(express.json());
 
 // Routes
-app.get('/api/comedians', getComedians);
+app.use('/api/comedians', comedianRoutes);
 
-// Error middleware (must be last)
+// Error middleware MUST be last (after all routes)
 app.use(errorMiddleware);
 ```
 
@@ -261,24 +390,29 @@ app.use(errorMiddleware);
 ### Using cURL
 
 ```bash
-# Test logging middleware
-curl http://localhost:3000/api/comedians
-# Check console for log output
+# Test validation (should fail)
+curl -X POST http://localhost:3000/api/comedians \
+  -H "Content-Type: application/json" \
+  -d '{}'
 
-# Test error middleware
-curl http://localhost:3000/api/non-existent
-# Should return 404 error response
+# Test validation (should pass)
+curl -X POST http://localhost:3000/api/comedians \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test Comedian","nationality":"US"}'
+
+# Test error handling (404)
+curl http://localhost:3000/api/comedians/non-existent-id
 ```
 
 ## Important Notes
 
-1. **Call next()**: Always call `next()` in middleware unless you're ending the request
-2. **Order matters**: Middleware executes in registration order
-3. **Error middleware**: Must have 4 parameters and be registered last
-4. **Global vs Route-specific**: Use `app.use()` for global, `router.use()` for router-specific
-5. **Async middleware**: If middleware is async, handle errors properly
+1. **Middleware Order**: Middleware executes in registration order - validation before routes, error handling after routes
+2. **Error Middleware**: Must have 4 parameters and be registered last
+3. **next()**: Always call `next()` in middleware unless you're ending the request
+4. **Validation**: Apply validation to routes that accept request bodies (POST, PUT)
+5. **Error Propagation**: Use `next(error)` in controllers to pass errors to error middleware
+6. **CustomError**: Use for consistent error handling with status codes
 
 ## Next Steps
 
-After completing this task, you'll move on to Task 5: Database Connection & Drizzle Setup, where you'll learn to connect to PostgreSQL and set up Drizzle ORM.
-
+After completing this task, you'll move on to Task 6: CRUD Operations with Drizzle, where you'll replace hardcoded data with database queries. (Note: Task 5 is skipped - the database setup is provided in the Task 6 starter branch.)

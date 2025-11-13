@@ -8,49 +8,110 @@
 - Use router mounting with `app.use()`
 - Separate concerns (routes, controllers, middleware)
 
+## Why This Matters
+
+Organizing code into routers and controllers provides several benefits:
+
+- **Separation of Concerns**: Routes define endpoints, controllers handle business logic
+- **Maintainability**: Easier to find and modify code when it's organized by feature
+- **Scalability**: Adding new resources is as simple as creating new router/controller files
+- **Testability**: Controllers can be tested independently
+- **Reusability**: Controller functions can be reused across different routes
+
+This structure is standard in Express applications and makes code much easier to work with as your API grows.
+
 ## Overview
 
-In this task, you'll learn how to organize your Express application by splitting routes into separate router modules. This makes your code more maintainable and scalable.
+In this task, you'll learn how to organize your Express application by splitting routes into separate router modules and extracting route handlers into controller functions. This makes your code more maintainable and scalable.
+
+**Important**: In this task, you'll create both the `controllers/` directory and the `routes/` directory. Controllers are created here (not in earlier tasks).
+
+## Starter Branch
+
+This task starts with:
+
+- All routes defined directly in `server.ts`
+- Route handlers as inline functions or basic handlers
+- No `controllers/` directory yet
+- No `routes/` directory yet
+- Dynamic routes and query parameters working from Task 2
 
 ## Instructions
 
-### Step 1: Create Express Router
+### Step 1: Extract Route Handlers into Controllers
 
-Learn to use `express.Router()` to create modular route handlers.
+**This is where controllers are created!** Extract your route handler functions into separate controller files.
+
+1. Create the `src/controllers/` directory
+2. Create `src/controllers/comedian.controller.ts`
+3. Move your route handler logic into controller functions:
+
+```typescript
+// src/controllers/comedian.controller.ts
+import { Request, Response } from 'express';
+import { mockComedians } from '../data/mockData';
+
+export const getAllComedians = (req: Request, res: Response) => {
+  res.status(200).json({
+    data: mockComedians,
+    count: mockComedians.length,
+  });
+};
+
+export const getComedianById = (req: Request, res: Response) => {
+  const { id } = req.params;
+  const comedian = mockComedians.find((c) => c.id === id);
+
+  if (!comedian) {
+    return res.status(404).json({
+      error: { message: 'Comedian not found', statusCode: 404 },
+    });
+  }
+
+  res.json({ data: comedian });
+};
+
+// Add other controller functions...
+```
+
+### Step 2: Create Express Router
+
+Create router modules using `express.Router()`.
+
+1. Create the `src/routes/` directory
+2. Create `src/routes/comedians.routes.ts`
+3. Import your controller functions and define routes:
 
 ```typescript
 import { Router } from 'express';
+import {
+  getAllComedians,
+  getComedianById,
+  createComedian,
+} from '../controllers/comedian.controller';
+
 const router = Router();
-```
 
-### Step 2: Define Routes on Router
-
-Define routes on the router instead of directly on the app.
-
-```typescript
 router.get('/', getAllComedians);
 router.get('/:id', getComedianById);
 router.post('/', createComedian);
-```
 
-### Step 3: Export Router
-
-Export the router to use in your main application file.
-
-```typescript
 export default router;
 ```
 
-### Step 4: Mount Router in Main App
+### Step 3: Mount Routers in Main App
 
-Mount the router in your main `server.ts` file using `app.use()`.
+Mount the routers in your main `server.ts` file using `app.use()`.
 
 ```typescript
 import comedianRoutes from './routes/comedians.routes';
+import performanceRoutes from './routes/performances.routes';
+
 app.use('/api/comedians', comedianRoutes);
+app.use('/api/performances', performanceRoutes);
 ```
 
-### Step 5: Organize Multiple Routers
+### Step 4: Organize Multiple Routers
 
 Create separate router files for different resources (comedians, performances, etc.).
 
@@ -63,137 +124,22 @@ Create separate router files for different resources (comedians, performances, e
 
 ## File Structure
 
+**Before this task**: All routes in `server.ts`
+
+**After this task**:
+
 ```
 src/
 ├── routes/
-│   ├── comedians.routes.ts
-│   ├── performances.routes.ts
-│   └── auth.routes.ts
+│   ├── comedians.routes.ts      ← Created in this task
+│   └── performances.routes.ts   ← Created in this task
 ├── controllers/
-│   ├── comedian.controller.ts
-│   ├── performance.controller.ts
-│   └── auth.controller.ts
-└── server.ts
+│   ├── comedian.controller.ts   ← Created in this task
+│   └── performance.controller.ts ← Created in this task
+└── server.ts                     ← Updated to mount routers
 ```
 
-## Manual Testing (Gherkin Format)
-
-### Feature: Router Organization
-
-```gherkin
-Scenario: Access comedian routes through mounted router
-  Given the comedian router is mounted at /api/comedians
-  When I send a GET request to /api/comedians
-  Then I should receive a 200 status code
-    And the response should contain a list of comedians
-
-Scenario: Access nested route through router
-  Given the comedian router is mounted at /api/comedians
-  When I send a GET request to /api/comedians/abc-123
-  Then I should receive a 200 status code
-    And the response should contain the comedian with id "abc-123"
-```
-
-**Expected Request:**
-```bash
-GET http://localhost:3000/api/comedians
-```
-
-**Expected Response:**
-```json
-{
-  "data": [
-    { "id": "1", "name": "Comedian 1" },
-    { "id": "2", "name": "Comedian 2" }
-  ],
-  "count": 2
-}
-```
-
-### Feature: Multiple Routers
-
-```gherkin
-Scenario: Access different resource through separate router
-  Given the performance router is mounted at /api/performances
-  When I send a GET request to /api/performances
-  Then I should receive a 200 status code
-    And the response should contain a list of performances
-
-Scenario: Verify routers are independent
-  Given both comedian and performance routers are mounted
-  When I send a GET request to /api/comedians
-  Then I should receive comedian data
-    And when I send a GET request to /api/performances
-    Then I should receive performance data
-    And the responses should be independent
-```
-
-**Expected Request:**
-```bash
-GET http://localhost:3000/api/performances
-```
-
-**Expected Response:**
-```json
-{
-  "data": [
-    {
-      "id": "perf-1",
-      "title": "Special Show",
-      "comedianId": "abc-123"
-    }
-  ],
-  "count": 1
-}
-```
-
-### Feature: Router with Middleware
-
-```gherkin
-Scenario: Apply middleware to specific router
-  Given the favorites router has authentication middleware
-  When I send a GET request to /api/favorites without authentication
-  Then I should receive a 401 status code
-    And the response should indicate authentication is required
-
-Scenario: Access protected route with authentication
-  Given I have a valid JWT token
-  When I send a GET request to /api/favorites
-    And I include the Authorization header with Bearer token
-  Then I should receive a 200 status code
-    And the response should contain favorite comedians
-```
-
-**Expected Request (Unauthorized):**
-```bash
-GET http://localhost:3000/api/favorites
-```
-
-**Expected Response:**
-```json
-{
-  "error": {
-    "message": "Unauthorized - Invalid or missing token",
-    "statusCode": 401
-  }
-}
-```
-
-**Expected Request (Authorized):**
-```bash
-GET http://localhost:3000/api/favorites
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**Expected Response:**
-```json
-{
-  "data": [
-    { "id": "1", "name": "Favorite Comedian 1" }
-  ],
-  "count": 1
-}
-```
+**Key Point**: Both `routes/` and `controllers/` directories are created in this task.
 
 ## Code Examples
 
@@ -278,5 +224,4 @@ curl http://localhost:3000/api/favorites
 
 ## Next Steps
 
-After completing this task, you'll move on to Task 4: Middleware Pipeline, where you'll learn how middleware functions work and how to create custom middleware.
-
+After completing this task, you'll move on to Task 4: Middleware Pipeline, where you'll learn how middleware functions work and how to create custom middleware for validation and error handling.
