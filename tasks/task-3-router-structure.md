@@ -92,12 +92,65 @@ import {
 
 const router = Router();
 
+/**
+ * @swagger
+ * /api/comedians:
+ *   get:
+ *     summary: Get all comedians
+ *     tags: [Comedians]
+ *     responses:
+ *       200:
+ *         description: List of comedians
+ */
 router.get('/', getAllComedians);
+
+/**
+ * @swagger
+ * /api/comedians/{id}:
+ *   get:
+ *     summary: Get comedian by ID
+ *     tags: [Comedians]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Comedian details
+ *       404:
+ *         description: Not found
+ */
 router.get('/:id', getComedianById);
+
+/**
+ * @swagger
+ * /api/comedians:
+ *   post:
+ *     summary: Create a new comedian
+ *     tags: [Comedians]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Comedian created
+ */
 router.post('/', createComedian);
 
 export default router;
 ```
+
+**Important**: When moving routes to separate files, **keep the Swagger annotations**! They should be in the route files, not in controllers. Swagger reads from route files.
 
 ### Step 3: Mount Routers in Main App
 
