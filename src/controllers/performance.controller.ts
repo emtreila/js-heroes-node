@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import { db } from '../db';
 import { comedians } from '../db/schema/comedians';
 import { performances } from '../db/schema/performances';
+import { CustomError } from '../middleware/error.middleware';
 
 export const getAllPerformances = async (
   req: Request,
@@ -109,9 +110,7 @@ export const updatePerformance = async (
     const [existing] = await db.select().from(performances).where(eq(performances.id, id)).limit(1);
 
     if (!existing) {
-      const error = new Error('Performance not found');
-      res.status(404).json({ error: { message: error.message } });
-      return;
+      throw new CustomError('Performance not found', 404);
     }
 
     // If comedianId is being updated, verify it exists
@@ -123,9 +122,7 @@ export const updatePerformance = async (
         .limit(1);
 
       if (!comedian) {
-        const error = new Error('Comedian not found');
-        res.status(404).json({ error: { message: error.message } });
-        return;
+        throw new CustomError('Comedian not found', 404);
       }
     }
 
@@ -163,9 +160,7 @@ export const deletePerformance = async (
     const [existing] = await db.select().from(performances).where(eq(performances.id, id)).limit(1);
 
     if (!existing) {
-      const error = new Error('Performance not found');
-      res.status(404).json({ error: { message: error.message } });
-      return;
+      throw new CustomError('Performance not found', 404);
     }
 
     await db.delete(performances).where(eq(performances.id, id));

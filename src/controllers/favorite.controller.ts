@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import { db } from '../db';
 import { comedians } from '../db/schema/comedians';
 import { favorites } from '../db/schema/favorites';
+import { CustomError } from '../middleware/error.middleware';
 import { assertAuthenticated } from '../utils/auth.util';
 
 export const getFavorites = async (
@@ -49,9 +50,7 @@ export const addFavorite = async (
       .limit(1);
 
     if (!comedian) {
-      const error = new Error('Comedian not found');
-      res.status(404).json({ error: { message: error.message } });
-      return;
+      throw new CustomError('Comedian not found', 404);
     }
 
     // Check if already favorited
@@ -62,9 +61,7 @@ export const addFavorite = async (
       .limit(1);
 
     if (existing) {
-      const error = new Error('Comedian already in favorites');
-      res.status(409).json({ error: { message: error.message } });
-      return;
+      throw new CustomError('Comedian already in favorites', 409);
     }
 
     await db.insert(favorites).values({
@@ -99,9 +96,7 @@ export const removeFavorite = async (
       .limit(1);
 
     if (!existing) {
-      const error = new Error('Favorite not found');
-      res.status(404).json({ error: { message: error.message } });
-      return;
+      throw new CustomError('Comedian not in favorites', 409);
     }
 
     await db

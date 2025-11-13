@@ -8,6 +8,7 @@ import { swaggerSpec } from './config/swagger';
 import { initializeDatabase } from './db/init';
 import { jwtStrategy } from './strategies/jwt.strategy';
 
+import { errorMiddleware } from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
 import comedianRoutes from './routes/comedians.routes';
 import favoriteRoutes from './routes/favorites.routes';
@@ -58,6 +59,8 @@ app.use((_req: Request, res: Response) => {
     },
   });
 });
+
+app.use(errorMiddleware);
 
 // Initialize database and start server
 async function startServer() {

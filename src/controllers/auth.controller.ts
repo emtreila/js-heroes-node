@@ -2,10 +2,11 @@ import { eq } from 'drizzle-orm';
 import { NextFunction, Request, Response } from 'express';
 import { db } from '../db';
 import { users } from '../db/schema/users';
+import { CustomError } from '../middleware/error.middleware';
 import { generateToken } from '../utils/jwt.util';
 import { comparePassword, hashPassword } from '../utils/password.util';
 
-export const register = async (req: Request, res: Response): Promise<void> => {
+export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email, password } = req.body;
 
@@ -13,9 +14,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const existingUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
     if (existingUsers.length > 0) {
-      const error = new Error('User with this email already exists');
-      res.status(409).json({ error: { message: error.message } });
-      return;
+      throw new CustomError('User with this email already exists', 409);
     }
 
     // Hash password
@@ -42,7 +41,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       token,
     });
   } catch (error) {
-    res.status(500).json({ error: { message: 'Internal server error' } });
+    next(error);
   }
 };
 
@@ -54,18 +53,14 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
     if (!user) {
-      const error = new Error('Invalid email or password');
-      res.status(401).json({ error: { message: error.message } });
-      throw error;
+      throw new CustomError('Invalid email or password', 401);
     }
 
     // Verify password
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      const error = new Error('Invalid email or password');
-      res.status(401).json({ error: { message: error.message } });
-      return;
+      throw new CustomError('Invalid email or password', 401);
     }
 
     // Generate token

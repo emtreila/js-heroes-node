@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { NextFunction, Request, Response } from 'express';
 import { db } from '../db';
 import { comedians } from '../db/schema/comedians';
+import { CustomError } from '../middleware/error.middleware';
 
 export const getAllComedians = async (
   req: Request,
@@ -47,8 +48,7 @@ export const getComedianById = async (
     const [comedian] = await db.select().from(comedians).where(eq(comedians.id, id)).limit(1);
 
     if (!comedian) {
-      res.status(404).json({ error: { message: 'Comedian not found' } });
-      return;
+      throw new CustomError('Comedian not found', 404);
     }
 
     res.json({ data: comedian });
@@ -97,8 +97,7 @@ export const updateComedian = async (
     const [existing] = await db.select().from(comedians).where(eq(comedians.id, id)).limit(1);
 
     if (!existing) {
-      res.status(404).json({ error: { message: 'Comedian not found' } });
-      return;
+      throw new CustomError('Comedian not found', 404);
     }
 
     const [updated] = await db
@@ -134,8 +133,7 @@ export const deleteComedian = async (
     const [existing] = await db.select().from(comedians).where(eq(comedians.id, id)).limit(1);
 
     if (!existing) {
-      res.status(404).json({ error: { message: 'Comedian not found' } });
-      return;
+      throw new CustomError('Comedian not found', 404);
     }
 
     await db.delete(comedians).where(eq(comedians.id, id));
