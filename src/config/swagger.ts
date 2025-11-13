@@ -14,18 +14,8 @@ const options: swaggerJsdoc.Options = {
         description: 'Development server',
       },
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
-    },
   },
-  apis: ['./src/routes/*.ts', './src/server.ts'],
+  apis: ['./src/server.ts'], // Path to the API files
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
-
