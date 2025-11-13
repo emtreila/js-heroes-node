@@ -29,7 +29,28 @@ In this task, you'll learn how to create flexible routes that accept dynamic val
 
 Learn to use `:parameterName` syntax in Express routes to capture dynamic values from the URL.
 
+**Important**: Document path parameters in Swagger using the `parameters` section:
+
 ```typescript
+/**
+ * @swagger
+ * /api/comedians/{id}:
+ *   get:
+ *     summary: Get comedian by ID
+ *     tags: [Comedians]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Comedian ID
+ *     responses:
+ *       200:
+ *         description: Comedian details
+ *       404:
+ *         description: Comedian not found
+ */
 app.get('/api/comedians/:id', (req, res) => {
   const { id } = req.params;
   // Use id to find the comedian
@@ -38,26 +59,54 @@ app.get('/api/comedians/:id', (req, res) => {
 
 ### Step 2: Access Route Parameters
 
-Understand how to access route parameters using `req.params`.
+Understand how to access route parameters using `req.params`. The `{id}` in the Swagger path matches the `:id` in your route.
 
 ### Step 3: Handle Query Parameters
 
 Learn to read query parameters from `req.query` and use them for filtering.
 
+**Important**: Document query parameters in Swagger using the `parameters` section with `in: query`:
+
 ```typescript
+/**
+ * @swagger
+ * /api/comedians:
+ *   get:
+ *     summary: Get all comedians
+ *     tags: [Comedians]
+ *     parameters:
+ *       - in: query
+ *         name: nationality
+ *         schema:
+ *           type: string
+ *         description: Filter by nationality (e.g., US, UK)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Maximum number of results
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *         description: Number of results to skip
+ *     responses:
+ *       200:
+ *         description: List of comedians
+ */
 app.get('/api/comedians', (req, res) => {
-  const { nationality, limit } = req.query;
+  const { nationality, limit, offset } = req.query;
   // Use query params to filter results
 });
 ```
 
 ### Step 4: Implement Filtering
 
-Use query parameters to filter comedians by nationality.
+Use query parameters to filter comedians by nationality. Make sure to document the `nationality` query parameter in Swagger!
 
 ### Step 5: Implement Pagination
 
-Add `limit` and `offset` query parameters for pagination.
+Add `limit` and `offset` query parameters for pagination. Document both parameters in Swagger so users know how to paginate.
 
 ## Key Concepts
 
@@ -105,6 +154,7 @@ fetch(`http://localhost:3000/api/comedians?${params}`)
 2. **Validate input**: Always validate and sanitize user input from query parameters
 3. **Default values**: Provide sensible defaults for optional parameters
 4. **URL encoding**: Query parameter values are automatically URL-decoded by Express
+5. **Document in Swagger**: Always add query parameters to your Swagger annotations - users can then test them directly in Swagger UI!
 
 ## Next Steps
 

@@ -368,6 +368,16 @@ curl -X PUT http://localhost:3000/api/comedians/abc-123 \
 curl -X DELETE http://localhost:3000/api/comedians/abc-123
 ```
 
+## Important Notes
+
+1. **Database is Provided**: The database setup is complete - you just need to use it
+2. **Returning Clause**: Use `.returning()` to get the created/updated record
+3. **Error Handling**: Always wrap database operations in try-catch and use `next(error)`
+4. **Type Safety**: Drizzle provides TypeScript types based on your schema
+5. **Async/Await**: All database operations are async - use `async/await`
+6. **Scope**: This task covers comedians and performances only - users/favorites come in Task 6
+7. **Swagger Documentation**: Document all CRUD endpoints in Swagger! Include all possible status codes (200, 201, 400, 404, 500) in your annotations.
+
 ## Next Steps
 
 After completing this task, you'll move on to Task 6: Authentication & Protected Routes, where you'll add user authentication and protect certain routes. The user schema is already provided in the starter branch.

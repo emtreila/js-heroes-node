@@ -299,11 +299,73 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Validation error
+ *       409:
+ *         description: User already exists
+ */
 router.post('/register', validate(registerSchema), register);
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ *       400:
+ *         description: Validation error
+ */
 router.post('/login', validate(loginSchema), login);
 
 export default router;
 ```
+
+**Important**: Document auth endpoints in Swagger so users can test registration and login directly in Swagger UI!
 
 Mount in `server.ts`:
 
@@ -489,12 +551,87 @@ const addFavoriteSchema = z.object({
 // Apply authentication middleware to all routes
 router.use(passport.authenticate('jwt', { session: false }));
 
+/**
+ * @swagger
+ * /api/favorites:
+ *   get:
+ *     summary: Get user's favorite comedians
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of favorite comedians
+ *       401:
+ *         description: Unauthorized
+ */
 router.get('/', getFavorites);
+
+/**
+ * @swagger
+ * /api/favorites:
+ *   post:
+ *     summary: Add comedian to favorites
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - comedianId
+ *             properties:
+ *               comedianId:
+ *                 type: string
+ *                 format: uuid
+ *     responses:
+ *       201:
+ *         description: Comedian added to favorites
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Comedian not found
+ *       409:
+ *         description: Already in favorites
+ */
 router.post('/', validate(addFavoriteSchema), addFavorite);
+
+/**
+ * @swagger
+ * /api/favorites/{comedianId}:
+ *   delete:
+ *     summary: Remove comedian from favorites
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comedianId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       204:
+ *         description: Favorite removed
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Favorite not found
+ */
 router.delete('/:comedianId', removeFavorite);
 
 export default router;
 ```
+
+**Important**:
+
+- Add `security: [{ bearerAuth: [] }]` to all protected routes
+- Document 401 responses for authentication failures
+- This tells Swagger UI that these endpoints require authentication
 
 Mount in `server.ts`:
 
@@ -550,7 +687,14 @@ curl http://localhost:3000/api/favorites
 4. **Protected Routes**: Use `passport.authenticate('jwt', { session: false })` to protect routes
 5. **req.user**: Available in controllers after authentication middleware
 6. **User-specific data**: Always filter by `req.user.id` to ensure users only see their own data
+7. **Swagger Documentation**:
+   - Document auth endpoints (register, login) with request/response schemas
+   - Add `security: [{ bearerAuth: [] }]` to protected routes (favorites)
+   - Document 401 responses for protected routes
+   - Use the `AuthRequest` and `AuthResponse` schemas (defined in Task 7)
 
 ## Next Steps
 
-After completing this task, you'll move on to Task 7: Swagger Documentation, where you'll document all your API endpoints for easy testing and reference.
+## Next Steps
+
+Congratulations! You've completed all the core tasks. You can now explore the extra assignments or review what you've learned.

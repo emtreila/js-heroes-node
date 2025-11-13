@@ -412,6 +412,7 @@ curl http://localhost:3000/api/comedians/non-existent-id
 4. **Validation**: Apply validation to routes that accept request bodies (POST, PUT)
 5. **Error Propagation**: Use `next(error)` in controllers to pass errors to error middleware
 6. **CustomError**: Use for consistent error handling with status codes
+7. **Swagger Documentation**: Remember to document all endpoints in Swagger! Add `@swagger` annotations above routes, including error responses (400, 500, etc.)
 
 ## Next Steps
 
