@@ -24,7 +24,7 @@ const options: swaggerJsdoc.Options = {
       },
     },
   },
-  apis: ['./src/routes/*.ts', './src/server.ts'],
+  apis: ['./src/server.ts'], // Routes directory doesn't exist yet in Task 3
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

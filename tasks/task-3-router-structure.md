@@ -250,31 +250,6 @@ router.get('/', getFavorites);
 export default router;
 ```
 
-## Testing Examples
-
-### Using cURL
-
-```bash
-# Test comedian router
-curl http://localhost:3000/api/comedians
-curl http://localhost:3000/api/comedians/abc-123
-
-# Test performance router
-curl http://localhost:3000/api/performances
-curl http://localhost:3000/api/performances/perf-1
-
-# Test protected router (should fail without auth)
-curl http://localhost:3000/api/favorites
-```
-
-## Best Practices
-
-1. **One router per resource**: Create separate router files for each main resource
-2. **Consistent naming**: Use `*.routes.ts` for route files, `*.controller.ts` for controllers
-3. **Mount at logical paths**: Use RESTful conventions (`/api/resource-name`)
-4. **Router-specific middleware**: Apply middleware at router level when all routes need it
-5. **Export default**: Use default exports for routers for cleaner imports
-
 ## Next Steps
 
 After completing this task, you'll move on to Task 4: Middleware Pipeline, where you'll learn how middleware functions work and how to create custom middleware for validation and error handling.
