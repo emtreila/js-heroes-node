@@ -385,25 +385,6 @@ app.use('/api/comedians', comedianRoutes);
 app.use(errorMiddleware);
 ```
 
-## Testing Examples
-
-### Using cURL
-
-```bash
-# Test validation (should fail)
-curl -X POST http://localhost:3000/api/comedians \
-  -H "Content-Type: application/json" \
-  -d '{}'
-
-# Test validation (should pass)
-curl -X POST http://localhost:3000/api/comedians \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test Comedian","nationality":"US"}'
-
-# Test error handling (404)
-curl http://localhost:3000/api/comedians/non-existent-id
-```
-
 ## Important Notes
 
 1. **Middleware Order**: Middleware executes in registration order - validation before routes, error handling after routes
