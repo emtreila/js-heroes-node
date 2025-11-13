@@ -415,4 +415,4 @@ curl http://localhost:3000/api/comedians/non-existent-id
 
 ## Next Steps
 
-After completing this task, you'll move on to Task 6: CRUD Operations with Drizzle, where you'll replace hardcoded data with database queries. (Note: Task 5 is skipped - the database setup is provided in the Task 6 starter branch.)
+After completing this task, you'll move on to Task 5: CRUD Operations with Drizzle, where you'll replace hardcoded data with database queries.

@@ -1,4 +1,4 @@
-# Task 7: Authentication & Protected Routes
+# Task 6: Authentication & Protected Routes
 
 ## Learning Objectives
 

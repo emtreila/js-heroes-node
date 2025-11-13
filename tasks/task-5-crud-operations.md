@@ -1,4 +1,4 @@
-# Task 6: CRUD Operations with Drizzle
+# Task 5: CRUD Operations with Drizzle
 
 ## Learning Objectives
 

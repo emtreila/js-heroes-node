@@ -1,4 +1,4 @@
-# Task 9: Swagger Documentation
+# Task 7: Swagger Documentation
 
 ## Learning Objectives
 
