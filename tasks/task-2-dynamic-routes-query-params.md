@@ -115,39 +115,6 @@ Add `limit` and `offset` query parameters for pagination. Document both paramete
 - **req.params**: Object containing route parameters
 - **req.query**: Object containing query parameters (always strings)
 
-## Testing Examples
-
-### Using cURL
-
-```bash
-# Get comedian by ID
-curl http://localhost:3000/api/comedians/abc-123
-
-# Filter by nationality
-curl "http://localhost:3000/api/comedians?nationality=US"
-
-# Pagination
-curl "http://localhost:3000/api/comedians?limit=5&offset=0"
-
-# Combined
-curl "http://localhost:3000/api/comedians?nationality=US&limit=3"
-```
-
-### Using JavaScript Fetch
-
-```javascript
-// Get comedian by ID
-fetch('http://localhost:3000/api/comedians/abc-123')
-  .then((res) => res.json())
-  .then((data) => console.log(data));
-
-// Filter with query params
-const params = new URLSearchParams({ nationality: 'US', limit: '5' });
-fetch(`http://localhost:3000/api/comedians?${params}`)
-  .then((res) => res.json())
-  .then((data) => console.log(data));
-```
-
 ## Important Notes
 
 1. **Query parameters are always strings**: Convert to numbers when needed using `Number()` or `parseInt()`
