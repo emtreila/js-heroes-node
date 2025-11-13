@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: comedian-catalog-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: comedian_catalog
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: comedian-catalog-app
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/comedian_catalog
+      JWT_SECRET: workshop-secret-key-change-in-production
+      JWT_EXPIRES_IN: 7d
+      # Database initialization (set to 'false' to disable migrations on start)
+      RUN_MIGRATIONS_ON_START: 'true'
+      # Seed database (set to 'true' to seed on start, only runs if tables are empty)
+      RUN_SEED_ON_START: 'true'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./dist:/app/dist
+    command: npm run dev
+
+volumes:
+  postgres_data:
