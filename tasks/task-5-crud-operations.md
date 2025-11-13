@@ -27,7 +27,7 @@ In this task, you'll learn how to perform all CRUD (Create, Read, Update, Delete
 
 **Important**: The database is **fully configured** in the starter branch. You don't need to set up the database - it's already done! You just need to replace mock data with database queries.
 
-**Scope**: In this task, we'll work with **comedians and performances only**. Users and favorites will be added in Task 7.
+**Scope**: In this task, we'll work with **comedians and performances only**. Users and favorites will be added in Task 6.
 
 ## Starter Branch
 
@@ -54,7 +54,8 @@ This task starts with:
 3. **Error Handling**: Always wrap database operations in try-catch and use `next(error)`
 4. **Type Safety**: Drizzle provides TypeScript types based on your schema
 5. **Async/Await**: All database operations are async - use `async/await`
-6. **Scope**: This task covers comedians and performances only - users/favorites come in Task 7
+6. **Scope**: This task covers comedians and performances only - users/favorites come in Task 6
+7. **Swagger Documentation**: Document all CRUD endpoints in Swagger! Include all possible status codes (200, 201, 400, 404, 500) in your annotations.
 
 ## Instructions
 
@@ -341,42 +342,7 @@ const comedianPerformances = await db
   .where(eq(performances.comedianId, comedianId));
 ```
 
-**Note**: In this task, we focus on comedians and performances. Users and favorites (with their relationships) will be added in Task 7.
-
-## Testing Examples
-
-### Using cURL
-
-```bash
-# Create
-curl -X POST http://localhost:3000/api/comedians \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test Comedian","nationality":"US"}'
-
-# Read all
-curl http://localhost:3000/api/comedians
-
-# Read by ID
-curl http://localhost:3000/api/comedians/abc-123
-
-# Update
-curl -X PUT http://localhost:3000/api/comedians/abc-123 \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Updated Name"}'
-
-# Delete
-curl -X DELETE http://localhost:3000/api/comedians/abc-123
-```
-
-## Important Notes
-
-1. **Database is Provided**: The database setup is complete - you just need to use it
-2. **Returning Clause**: Use `.returning()` to get the created/updated record
-3. **Error Handling**: Always wrap database operations in try-catch and use `next(error)`
-4. **Type Safety**: Drizzle provides TypeScript types based on your schema
-5. **Async/Await**: All database operations are async - use `async/await`
-6. **Scope**: This task covers comedians and performances only - users/favorites come in Task 6
-7. **Swagger Documentation**: Document all CRUD endpoints in Swagger! Include all possible status codes (200, 201, 400, 404, 500) in your annotations.
+**Note**: In this task, we focus on comedians and performances. Users and favorites (with their relationships) will be added in Task 6.
 
 ## Next Steps
 

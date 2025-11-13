@@ -177,4 +177,3 @@ export async function initializeDatabase(options?: {
     throw error;
   }
 }
-
