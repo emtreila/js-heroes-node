@@ -63,6 +63,7 @@ This task starts with:
 ### Step 1: Understand Swagger Setup
 
 **Swagger is already configured!** The starter branch includes:
+
 - Swagger UI available at `/api-docs`
 - Basic Swagger configuration in `src/config/swagger.ts`
 - The health endpoint is already documented as an example
@@ -209,35 +210,11 @@ Practice returning different status codes:
 6. See the response immediately!
 
 **Why document endpoints?**
+
 - Endpoints only appear in Swagger UI if they have `@swagger` annotations
 - Swagger UI lets you test endpoints without external tools
 - Documentation helps you and others understand the API
 - It's a professional best practice
-
-## Other Testing Tools
-
-You can also test endpoints using:
-
-- **cURL**: Command-line tool
-- **Postman**: GUI tool
-- **Thunder Client**: VS Code extension
-
-## Example cURL Commands
-
-**Note**: Make sure the app is running with `docker-compose up` before testing.
-
-```bash
-# Health check
-curl http://localhost:3000/health
-
-# GET request (get all comedians)
-curl http://localhost:3000/api/comedians
-
-# POST request (create a comedian)
-curl -X POST http://localhost:3000/api/comedians \
-  -H "Content-Type: application/json" \
-  -d '{"name":"New Comedian","bio":"A funny person","nationality":"US"}'
-```
 
 ## Important Notes
 
