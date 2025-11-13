@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { ZodError, ZodSchema } from 'zod';
+import { ZodError, ZodType } from 'zod';
 
-export const validate = (schema: ZodSchema) => {
+export const validate = (schema: ZodType) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
       schema.parse(req.body);
@@ -11,7 +11,7 @@ export const validate = (schema: ZodSchema) => {
         res.status(400).json({
           error: {
             message: 'Validation error',
-            details: error.errors,
+            details: error.issues,
           },
         });
       } else {
@@ -20,4 +20,3 @@ export const validate = (schema: ZodSchema) => {
     }
   };
 };
-

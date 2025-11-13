@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import {
-    createComedian,
-    deleteComedian,
-    getAllComedians,
-    getComedianById,
-    updateComedian,
+  createComedian,
+  deleteComedian,
+  getAllComedians,
+  getComedianById,
+  updateComedian,
 } from '../controllers/comedian.controller';
 import { validate } from '../middleware/validate.middleware';
 
@@ -14,14 +14,14 @@ const router = Router();
 const createComedianSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   bio: z.string().optional(),
-  birthDate: z.string().optional(),
+  birthDate: z.iso.date().optional(),
   nationality: z.string().optional(),
 });
 
 const updateComedianSchema = z.object({
   name: z.string().min(1).optional(),
   bio: z.string().optional(),
-  birthDate: z.string().optional(),
+  birthDate: z.iso.date().optional(),
   nationality: z.string().optional(),
 });
 
@@ -161,4 +161,3 @@ router.put('/:id', validate(updateComedianSchema), updateComedian);
 router.delete('/:id', deleteComedian);
 
 export default router;
-

@@ -7,7 +7,7 @@ import { validate } from '../middleware/validate.middleware';
 const router = Router();
 
 const addFavoriteSchema = z.object({
-  comedianId: z.string().uuid('Invalid comedian ID format'),
+  comedianId: z.uuid('Invalid comedian ID format'),
 });
 
 /**

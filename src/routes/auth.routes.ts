@@ -6,12 +6,12 @@ import { validate } from '../middleware/validate.middleware';
 const router = Router();
 
 const registerSchema = z.object({
-  email: z.string().email('Invalid email format'),
+  email: z.email('Invalid email format'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email format'),
+  email: z.email('Invalid email format'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -79,4 +79,3 @@ router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 
 export default router;
-

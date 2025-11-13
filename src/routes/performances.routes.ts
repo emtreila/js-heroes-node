@@ -12,18 +12,18 @@ import { validate } from '../middleware/validate.middleware';
 const router = Router();
 
 const createPerformanceSchema = z.object({
-  comedianId: z.string().uuid('Invalid comedian ID format'),
+  comedianId: z.uuid('Invalid comedian ID format'),
   title: z.string().min(1, 'Title is required'),
   venue: z.string().optional(),
-  date: z.date().optional(),
+  date: z.iso.date().optional(),
   description: z.string().optional(),
 });
 
 const updatePerformanceSchema = z.object({
-  comedianId: z.string().uuid().optional(),
+  comedianId: z.uuid().optional(),
   title: z.string().min(1).optional(),
   venue: z.string().optional(),
-  date: z.string().optional(),
+  date: z.iso.date().optional(),
   description: z.string().optional(),
 });
 
