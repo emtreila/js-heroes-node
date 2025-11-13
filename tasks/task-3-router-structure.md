@@ -248,24 +248,6 @@ router.use(authenticate);
 router.get('/', getFavorites);
 
 export default router;
-```
-
-## Testing Examples
-
-### Using cURL
-
-```bash
-# Test comedian router
-curl http://localhost:3000/api/comedians
-curl http://localhost:3000/api/comedians/abc-123
-
-# Test performance router
-curl http://localhost:3000/api/performances
-curl http://localhost:3000/api/performances/perf-1
-
-# Test protected router (should fail without auth)
-curl http://localhost:3000/api/favorites
-```
 
 ## Best Practices
 
@@ -278,3 +260,4 @@ curl http://localhost:3000/api/favorites
 ## Next Steps
 
 After completing this task, you'll move on to Task 4: Middleware Pipeline, where you'll learn how middleware functions work and how to create custom middleware for validation and error handling.
+```
