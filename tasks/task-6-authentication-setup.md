@@ -57,6 +57,20 @@ This task starts with:
 - **User-specific data**: Each user can have their own favorites, profile, etc.
 - **Stateless**: No server-side session storage needed
 
+## Important Notes
+
+1. **Never store plain passwords**: Always hash passwords before storing
+2. **JWT Secret**: Keep JWT secret secure and use environment variables
+3. **Token Expiration**: Set reasonable expiration times (7 days default)
+4. **Protected Routes**: Use `passport.authenticate('jwt', { session: false })` to protect routes
+5. **req.user**: Available in controllers after authentication middleware
+6. **User-specific data**: Always filter by `req.user.id` to ensure users only see their own data
+7. **Swagger Documentation**:
+   - Document auth endpoints (register, login) with request/response schemas
+   - Add `security: [{ bearerAuth: [] }]` to protected routes (favorites)
+   - Document 401 responses for protected routes
+   - Use the `AuthRequest` and `AuthResponse` schemas
+
 ## Instructions
 
 ### Part 1: Authentication Setup
@@ -654,46 +668,6 @@ app.use('/api/favorites', favoriteRoutes);
 - **Passport Strategy**: Authentication mechanism that verifies JWT tokens
 - **Protected Routes**: Routes that require authentication
 - **req.user**: Authenticated user attached to request after JWT verification
-
-## Testing Examples
-
-### Using cURL
-
-```bash
-# Register
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
-
-# Login (save token from response)
-TOKEN=$(curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}' \
-  | jq -r '.token')
-
-# Access protected route
-curl http://localhost:3000/api/favorites \
-  -H "Authorization: Bearer $TOKEN"
-
-# Try without token (should fail)
-curl http://localhost:3000/api/favorites
-```
-
-## Important Notes
-
-1. **Never store plain passwords**: Always hash passwords before storing
-2. **JWT Secret**: Keep JWT secret secure and use environment variables
-3. **Token Expiration**: Set reasonable expiration times (7 days default)
-4. **Protected Routes**: Use `passport.authenticate('jwt', { session: false })` to protect routes
-5. **req.user**: Available in controllers after authentication middleware
-6. **User-specific data**: Always filter by `req.user.id` to ensure users only see their own data
-7. **Swagger Documentation**:
-   - Document auth endpoints (register, login) with request/response schemas
-   - Add `security: [{ bearerAuth: [] }]` to protected routes (favorites)
-   - Document 401 responses for protected routes
-   - Use the `AuthRequest` and `AuthResponse` schemas (defined in Task 7)
-
-## Next Steps
 
 ## Next Steps
 

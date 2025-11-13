@@ -1,13 +1,9 @@
-import cors from 'cors';
 import * as dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
-import passport from 'passport';
 import swaggerUi from 'swagger-ui-express';
 
 import { swaggerSpec } from './config/swagger';
 import { initializeDatabase } from './db/init';
-import { jwtStrategy } from './strategies/jwt.strategy';
-
 import { errorMiddleware } from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
 import comedianRoutes from './routes/comedians.routes';
@@ -19,12 +15,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Middleware to parse JSON bodies
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-passport.use(jwtStrategy);
-app.use(passport.initialize());
 
 /**
  * @swagger
@@ -40,26 +32,19 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
   });
 });
 
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/comedians', comedianRoutes);
 app.use('/api/performances', performanceRoutes);
 app.use('/api/favorites', favoriteRoutes);
 
+// Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({
-    error: {
-      message: 'Route not found',
-      statusCode: 404,
-    },
-  });
-});
-
+// Error middleware (must be after routes)
 app.use(errorMiddleware);
 
 // Initialize database and start server

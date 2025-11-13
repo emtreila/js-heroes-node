@@ -1,24 +1,24 @@
-import * as dotenv from 'dotenv';
-import jwt from 'jsonwebtoken';
-import { StringValue } from 'ms';
+/**
+ * JWT utility functions
+ * TODO: Implement JWT token generation and verification
+ */
 
-dotenv.config();
-
-const JWT_SECRET: string = process.env.JWT_SECRET || 'default-secret-change-in-production';
-const JWT_EXPIRES_IN: StringValue = (process.env.JWT_EXPIRES_IN as StringValue) || '7d';
-
-export interface JwtPayload {
-  userId: string;
-}
-
+/**
+ * Generate a JWT token for a user
+ * @param userId - User ID to include in token
+ * @returns JWT token string
+ */
 export const generateToken = (userId: string): string => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  // TODO: Implement JWT token generation using jsonwebtoken
+  throw new Error('Not implemented yet');
 };
 
-export const verifyToken = (token: string): JwtPayload => {
-  try {
-    return jwt.verify(token, JWT_SECRET as string) as JwtPayload;
-  } catch (error) {
-    throw new Error('Invalid or expired token');
-  }
+/**
+ * Verify and decode a JWT token
+ * @param token - JWT token string
+ * @returns Decoded token payload with userId
+ */
+export const verifyToken = (token: string): { userId: string } => {
+  // TODO: Implement JWT token verification using jsonwebtoken
+  throw new Error('Not implemented yet');
 };
