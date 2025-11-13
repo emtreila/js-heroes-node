@@ -1,145 +1,91 @@
-import { eq } from 'drizzle-orm';
-import { NextFunction, Request, Response } from 'express';
-import { db } from '../db';
-import { comedians } from '../db/schema/comedians';
-import { CustomError } from '../middleware/error.middleware';
+import { Request, Response } from 'express';
+import { mockComedians } from '../data/mockData';
 
-export const getAllComedians = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { nationality, limit, offset } = req.query;
+export const getAllComedians = (req: Request, res: Response): void => {
+  const { nationality, limit, offset } = req.query;
 
-    let query = db.select().from(comedians);
+  let filteredComedians = [...mockComedians];
 
-    if (nationality) {
-      query = query.where(eq(comedians.nationality, nationality as string)) as any;
-    }
+  // Filter by nationality if provided
+  if (nationality) {
+    filteredComedians = filteredComedians.filter(
+      (c) => c.nationality === nationality
+    );
+  }
 
-    if (limit) {
-      query = query.limit(Number(limit)) as any;
-    }
+  // Apply pagination
+  const startIndex = offset ? Number(offset) : 0;
+  const endIndex = limit
+    ? startIndex + Number(limit)
+    : filteredComedians.length;
+  const paginatedComedians = filteredComedians.slice(startIndex, endIndex);
 
-    if (offset) {
-      query = query.offset(Number(offset)) as any;
-    }
+  res.json({
+    data: paginatedComedians,
+    count: paginatedComedians.length,
+  });
+};
 
-    const allComedians = await query;
+export const getComedianById = (req: Request, res: Response): void => {
+  const { id } = req.params;
+  const comedian = mockComedians.find((c) => c.id === id);
 
-    res.json({
-      data: allComedians,
-      count: allComedians.length,
+  if (!comedian) {
+    res.status(404).json({
+      error: { message: 'Comedian not found', statusCode: 404 },
     });
-  } catch (error) {
-    next(error);
+    return;
   }
+
+  res.json({ data: comedian });
 };
 
-export const getComedianById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-
-    const [comedian] = await db.select().from(comedians).where(eq(comedians.id, id)).limit(1);
-
-    if (!comedian) {
-      throw new CustomError('Comedian not found', 404);
-    }
-
-    res.json({ data: comedian });
-  } catch (error) {
-    next(error);
-  }
+export const createComedian = (req: Request, res: Response): void => {
+  const newComedian = {
+    id: Date.now().toString(),
+    ...req.body,
+  };
+  mockComedians.push(newComedian);
+  res.status(201).json({
+    message: 'Comedian created successfully',
+    data: newComedian,
+  });
 };
 
-export const createComedian = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { name, bio, birthDate, nationality } = req.body;
+export const updateComedian = (req: Request, res: Response): void => {
+  const { id } = req.params;
+  const comedianIndex = mockComedians.findIndex((c) => c.id === id);
 
-    const [newComedian] = await db
-      .insert(comedians)
-      .values({
-        name,
-        bio,
-        birthDate,
-        nationality,
-      })
-      .returning();
-
-    res.status(201).json({
-      message: 'Comedian created successfully',
-      data: newComedian,
+  if (comedianIndex === -1) {
+    res.status(404).json({
+      error: { message: 'Comedian not found', statusCode: 404 },
     });
-  } catch (error) {
-    next(error);
+    return;
   }
+
+  const updatedComedian = {
+    ...mockComedians[comedianIndex],
+    ...req.body,
+  };
+  mockComedians[comedianIndex] = updatedComedian;
+
+  res.json({
+    message: 'Comedian updated successfully',
+    data: updatedComedian,
+  });
 };
 
-export const updateComedian = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { name, bio, birthDate, nationality } = req.body;
+export const deleteComedian = (req: Request, res: Response): void => {
+  const { id } = req.params;
+  const comedianIndex = mockComedians.findIndex((c) => c.id === id);
 
-    // Check if comedian exists
-    const [existing] = await db.select().from(comedians).where(eq(comedians.id, id)).limit(1);
-
-    if (!existing) {
-      throw new CustomError('Comedian not found', 404);
-    }
-
-    const [updated] = await db
-      .update(comedians)
-      .set({
-        name: name || existing.name,
-        bio: bio !== undefined ? bio : existing.bio,
-        birthDate: birthDate || existing.birthDate,
-        nationality: nationality || existing.nationality,
-        updatedAt: new Date(),
-      })
-      .where(eq(comedians.id, id))
-      .returning();
-
-    res.json({
-      message: 'Comedian updated successfully',
-      data: updated,
+  if (comedianIndex === -1) {
+    res.status(404).json({
+      error: { message: 'Comedian not found', statusCode: 404 },
     });
-  } catch (error) {
-    next(error);
+    return;
   }
-};
 
-export const deleteComedian = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-
-    // Check if comedian exists
-    const [existing] = await db.select().from(comedians).where(eq(comedians.id, id)).limit(1);
-
-    if (!existing) {
-      throw new CustomError('Comedian not found', 404);
-    }
-
-    await db.delete(comedians).where(eq(comedians.id, id));
-
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
+  mockComedians.splice(comedianIndex, 1);
+  res.status(204).send();
 };

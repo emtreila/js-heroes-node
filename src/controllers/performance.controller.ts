@@ -1,172 +1,105 @@
-import { eq } from 'drizzle-orm';
-import { NextFunction, Request, Response } from 'express';
-import { db } from '../db';
-import { comedians } from '../db/schema/comedians';
-import { performances } from '../db/schema/performances';
-import { CustomError } from '../middleware/error.middleware';
+import { Request, Response } from 'express';
+import { mockComedians, mockPerformances } from '../data/mockData';
 
-export const getAllPerformances = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { comedianId } = req.query;
+export const getAllPerformances = (req: Request, res: Response): void => {
+  const { comedianId } = req.query;
 
-    let query = db.select().from(performances);
+  let filteredPerformances = [...mockPerformances];
 
-    if (comedianId) {
-      query = query.where(eq(performances.comedianId, comedianId as string)) as any;
-    }
+  if (comedianId) {
+    filteredPerformances = filteredPerformances.filter(
+      (p) => p.comedianId === comedianId
+    );
+  }
 
-    const allPerformances = await query;
+  res.json({
+    data: filteredPerformances,
+    count: filteredPerformances.length,
+  });
+};
 
-    res.json({
-      data: allPerformances,
-      count: allPerformances.length,
+export const getPerformanceById = (req: Request, res: Response): void => {
+  const { id } = req.params;
+  const performance = mockPerformances.find((p) => p.id === id);
+
+  if (!performance) {
+    res.status(404).json({
+      error: { message: 'Performance not found', statusCode: 404 },
     });
-  } catch (error) {
-    next(error);
+    return;
   }
+
+  res.json({ data: performance });
 };
 
-export const getPerformanceById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
+export const createPerformance = (req: Request, res: Response): void => {
+  const { comedianId } = req.body;
 
-    const [performance] = await db
-      .select()
-      .from(performances)
-      .where(eq(performances.id, id))
-      .limit(1);
-
-    if (!performance) {
-      const error = new Error('Performance not found');
-      res.status(404).json({ error: { message: error.message } });
-      return;
-    }
-
-    res.json({ data: performance });
-  } catch (error) {
-    next(error);
+  // Verify comedian exists
+  const comedian = mockComedians.find((c) => c.id === comedianId);
+  if (!comedian) {
+    res.status(404).json({
+      error: { message: 'Comedian not found', statusCode: 404 },
+    });
+    return;
   }
+
+  const newPerformance = {
+    id: Date.now().toString(),
+    ...req.body,
+  };
+  mockPerformances.push(newPerformance);
+  res.status(201).json({
+    message: 'Performance created successfully',
+    data: newPerformance,
+  });
 };
 
-export const createPerformance = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { comedianId, title, venue, date, description } = req.body;
+export const updatePerformance = (req: Request, res: Response): void => {
+  const { id } = req.params;
+  const performanceIndex = mockPerformances.findIndex((p) => p.id === id);
 
-    // Verify comedian exists
-    const [comedian] = await db
-      .select()
-      .from(comedians)
-      .where(eq(comedians.id, comedianId))
-      .limit(1);
+  if (performanceIndex === -1) {
+    res.status(404).json({
+      error: { message: 'Performance not found', statusCode: 404 },
+    });
+    return;
+  }
 
+  // If comedianId is being updated, verify it exists
+  if (req.body.comedianId) {
+    const comedian = mockComedians.find((c) => c.id === req.body.comedianId);
     if (!comedian) {
-      const error = new Error('Comedian not found');
-      res.status(404).json({ error: { message: error.message } });
+      res.status(404).json({
+        error: { message: 'Comedian not found', statusCode: 404 },
+      });
       return;
     }
-
-    const [newPerformance] = await db
-      .insert(performances)
-      .values({
-        comedianId,
-        title,
-        venue,
-        date,
-        description,
-      })
-      .returning();
-
-    res.status(201).json({
-      message: 'Performance created successfully',
-      data: newPerformance,
-    });
-  } catch (error) {
-    next(error);
   }
+
+  const updatedPerformance = {
+    ...mockPerformances[performanceIndex],
+    ...req.body,
+  };
+  mockPerformances[performanceIndex] = updatedPerformance;
+
+  res.json({
+    message: 'Performance updated successfully',
+    data: updatedPerformance,
+  });
 };
 
-export const updatePerformance = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { title, venue, date, description, comedianId } = req.body;
+export const deletePerformance = (req: Request, res: Response): void => {
+  const { id } = req.params;
+  const performanceIndex = mockPerformances.findIndex((p) => p.id === id);
 
-    // Check if performance exists
-    const [existing] = await db.select().from(performances).where(eq(performances.id, id)).limit(1);
-
-    if (!existing) {
-      throw new CustomError('Performance not found', 404);
-    }
-
-    // If comedianId is being updated, verify it exists
-    if (comedianId && comedianId !== existing.comedianId) {
-      const [comedian] = await db
-        .select()
-        .from(comedians)
-        .where(eq(comedians.id, comedianId))
-        .limit(1);
-
-      if (!comedian) {
-        throw new CustomError('Comedian not found', 404);
-      }
-    }
-
-    const [updated] = await db
-      .update(performances)
-      .set({
-        title: title || existing.title,
-        venue: venue !== undefined ? venue : existing.venue,
-        date: date || existing.date,
-        description: description !== undefined ? description : existing.description,
-        comedianId: comedianId || existing.comedianId,
-        updatedAt: new Date(),
-      })
-      .where(eq(performances.id, id))
-      .returning();
-
-    res.json({
-      message: 'Performance updated successfully',
-      data: updated,
+  if (performanceIndex === -1) {
+    res.status(404).json({
+      error: { message: 'Performance not found', statusCode: 404 },
     });
-  } catch (error) {
-    next(error);
+    return;
   }
-};
 
-export const deletePerformance = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-
-    // Check if performance exists
-    const [existing] = await db.select().from(performances).where(eq(performances.id, id)).limit(1);
-
-    if (!existing) {
-      throw new CustomError('Performance not found', 404);
-    }
-
-    await db.delete(performances).where(eq(performances.id, id));
-
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
+  mockPerformances.splice(performanceIndex, 1);
+  res.status(204).send();
 };

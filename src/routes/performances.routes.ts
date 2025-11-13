@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import {
   createPerformance,
   deletePerformance,
@@ -7,25 +6,8 @@ import {
   getPerformanceById,
   updatePerformance,
 } from '../controllers/performance.controller';
-import { validate } from '../middleware/validate.middleware';
 
 const router = Router();
-
-const createPerformanceSchema = z.object({
-  comedianId: z.uuid('Invalid comedian ID format'),
-  title: z.string().min(1, 'Title is required'),
-  venue: z.string().optional(),
-  date: z.iso.date().optional(),
-  description: z.string().optional(),
-});
-
-const updatePerformanceSchema = z.object({
-  comedianId: z.uuid().optional(),
-  title: z.string().min(1).optional(),
-  venue: z.string().optional(),
-  date: z.iso.date().optional(),
-  description: z.string().optional(),
-});
 
 /**
  * @swagger
@@ -83,7 +65,6 @@ router.get('/:id', getPerformanceById);
  *             properties:
  *               comedianId:
  *                 type: string
- *                 format: uuid
  *               title:
  *                 type: string
  *               venue:
@@ -101,7 +82,7 @@ router.get('/:id', getPerformanceById);
  *       400:
  *         description: Validation error
  */
-router.post('/', validate(createPerformanceSchema), createPerformance);
+router.post('/', createPerformance);
 
 /**
  * @swagger
@@ -138,7 +119,7 @@ router.post('/', validate(createPerformanceSchema), createPerformance);
  *       404:
  *         description: Performance not found
  */
-router.put('/:id', validate(updatePerformanceSchema), updatePerformance);
+router.put('/:id', updatePerformance);
 
 /**
  * @swagger

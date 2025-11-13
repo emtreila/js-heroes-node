@@ -246,6 +246,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', getFavorites);
+```
 
 export default router;
 
@@ -260,4 +261,3 @@ export default router;
 ## Next Steps
 
 After completing this task, you'll move on to Task 4: Middleware Pipeline, where you'll learn how middleware functions work and how to create custom middleware for validation and error handling.
-```
