@@ -38,33 +38,33 @@ app.get('/health', (_req: Request, res: Response) => {
   });
 });
 
-/**
- * @swagger
- * /api/comedians:
- *   get:
- *     summary: Get all comedians
- *     tags: [Comedians]
- *     responses:
- *       200:
- *         description: List of comedians
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                 count:
- *                   type: number
- */
-app.get('/api/comedians', (_req: Request, res: Response) => {
-  res.status(200).json({
-    data: mockComedians,
-    count: mockComedians.length,
-  });
-});
+// /**
+//  * @swagger
+//  * /api/comedians:
+//  *   get:
+//  *     summary: Get all comedians
+//  *     tags: [Comedians]
+//  *     responses:
+//  *       200:
+//  *         description: List of comedians
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 data:
+//  *                   type: array
+//  *                   items:
+//  *                     type: object
+//  *                 count:
+//  *                   type: number
+//  */
+// app.get('/api/comedians', (_req: Request, res: Response) => {
+//   res.status(200).json({
+//     data: mockComedians,
+//     count: mockComedians.length,
+//   });
+// });
 
 /**
  * @swagger
@@ -118,6 +118,104 @@ app.post('/api/comedians', (req: Request, res: Response) => {
     data: newComedian,
   });
 });
+
+/**
+ * @swagger
+ * /api/comedians/{id}:
+ *   get:
+ *     summary: Get comedian by ID
+ *     tags: [Comedians]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Comedian ID
+ *     responses:
+ *       200:
+ *         description: Comedian details
+ *       404:
+ *         description: Comedian not found
+ */
+app.get('/api/comedians/:id', (req, res) => {
+    const { id } = req.params;
+    // Use id to find the comedian
+    const comedian = mockComedians.find((c) => c.id === id);
+    if (comedian) {
+      res.status(200).json({
+        data: comedian,
+      });
+    } else {
+      res.status(404).json({
+        message: 'Comedian not found',
+      });
+    }
+});
+
+/**
+ * @swagger
+ * /api/comedians:
+ *   get:
+ *     summary: Get all comedians
+ *     tags: [Comedians]
+ *     parameters:
+ *       - in: query
+ *         name: nationality
+ *         schema:
+ *           type: string
+ *         description: Filter by nationality (e.g., US, UK)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Maximum number of results
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *         description: Number of results to skip
+ *     responses:
+ *       200:
+ *         description: List of comedians
+ */
+app.get('/api/comedians', (req, res) => {
+    const { nationality, limit, offset } = req.query;
+    // Use query params to filter results
+    let limitCopy = Number(limit);
+    let offsetCopy = Number(offset) -1;
+
+    if (!limit){
+        limitCopy = 10;
+    }
+    if (!offset){
+        offsetCopy = 1;
+    }
+    let comedians = mockComedians.filter((c) => c.nationality === nationality);
+    if (!comedians) {
+        res.status(404).json({
+            message: 'Comedian not found',
+        });
+    }
+    if (Number(limitCopy) <= 0) {
+        res.status(400).json({
+            message: 'Invalid limit',
+        })
+    }
+    if (Number(offsetCopy) < 0) {
+        res.status(400).json({
+            message: 'Invalid offset',
+        })
+    }
+    console.log("offset = ", offset, "limit = ", limit)
+    let comedians2 = comedians.slice(Number(offsetCopy),Number(offsetCopy)+Number(limitCopy));
+    res .status(200).json({
+        data: comedians2,
+    });
+});
+
+
+
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
